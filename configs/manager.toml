@@ -1,0 +1,30 @@
+[server]
+listen = "0.0.0.0:32112"
+mode = "debug"
+write_dir = "" #写linux的目录，存放log等文件的位置
+cookie_timeout = "24h"
+card_interval_time = "4s"
+
+[rmg]
+    corn_time = "0 */1 * * * ?"
+
+[db]
+    [db.afire]
+    type = "mysql" #mysql postgres
+    master_uri = "" #数据库的路由
+    slave_uris = [""] #同上
+    log_mode = true
+    max_idle_conns = 1
+    max_open_conns = 20
+
+[sql]
+agents = ["127.0.0.1:32113"]
+#production_ipmask = ["172.32.0.0/16"] #到时候服务器的ip,这里是举例
+
+[log]
+path = "D:\\GOPATH\\src\\afire\\log"
+level = "debug" #debug,info,error
+max_size_one_file = "1gb" #pb,tb,gb,mb,kb
+
+[debug]
+pprof_port = "0"
