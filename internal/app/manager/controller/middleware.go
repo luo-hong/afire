@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"afire/internal/pkg"
 	"afire/internal/pkg/gid"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sunreaver/logger"
 )
 
 const (
@@ -31,7 +31,7 @@ func SetRequestID() gin.HandlerFunc {
 			id = reqid
 		}
 		c.Header(XRequestID, id)
-		goroutineID := pkg.GetGID()
+		goroutineID := logger.GetGID()
 		if goroutineID > 0 {
 			gid.GetGidMap().Store(goroutineID, id)
 			defer gid.GetGidMap().Delete(goroutineID)

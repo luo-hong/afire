@@ -2,10 +2,13 @@ package service
 
 import (
 	"afire/configs"
+	"afire/internal/app/manager/business"
 	"afire/internal/app/manager/route"
 	"afire/internal/app/manager/service/exit"
+	"afire/internal/pkg/gid"
 	"afire/pkg/tool"
 	"flag"
+	"github.com/pkg/errors"
 	"github.com/sunreaver/logger"
 	"log"
 	"net/http"
@@ -63,4 +66,35 @@ func start() error {
 	}
 
 	//解析配置文件
+	c, e := configs.NewManagerConfig(configFile)
+	if e != nil {
+		return errors.Wrap(e, "start")
+	}
+
+	//连接db
+
+	//连接logger
+	log.Println("logger")
+	//创建logger
+	log.Println("logger")
+	// 创建logger
+	if e := logger.InitLoggerWithConfig(logger.Config{
+		Path:     c.Log.Path,
+		Loglevel: logger.LevelString(c.Log.Level),
+		MaxSize:  c.Log.MaxSizeOneFile.AsInt() / 1024 / 1024, // 单位由byte转为MB
+	}, nil, gid.GetGidMap()); e != nil {
+		return errors.Wrap(e, "init log")
+	}
+
+	//初始化表
+	log.Println("logger")
+	cfg = *c
+	l = logger.GetSugarLogger("manager.log")
+
+	l.Infow("started", "cfg", cfg)
+
+	log.Println("started")
+	business.SetLogger(l)
+
+	return nil
 }

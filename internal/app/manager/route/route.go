@@ -24,6 +24,5 @@ func SyncInitHTTP(cfg configs.ManagerConfig) error {
 	v1 := r.Group("/v1")
 
 	addUserRoute(v1)
-
 	return r.Run(cfg.HTTP.Listen)
 }
