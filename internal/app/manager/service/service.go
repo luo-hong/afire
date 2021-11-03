@@ -74,9 +74,9 @@ func start() error {
 	//连接db
 
 	//连接logger
-	log.Println("logger")
+	log.Println("====连接logger====")
 	//创建logger
-	log.Println("logger")
+	log.Println("++++创建logger++++")
 	// 创建logger
 	if e := logger.InitLoggerWithConfig(logger.Config{
 		Path:     c.Log.Path,
@@ -87,7 +87,7 @@ func start() error {
 	}
 
 	//初始化表
-	log.Println("logger")
+	log.Println("====logger正常====")
 	cfg = *c
 	l = logger.GetSugarLogger("manager.log")
 
