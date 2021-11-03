@@ -5,6 +5,7 @@ import (
 	"afire/internal/app/manager/business"
 	"afire/internal/app/manager/route"
 	"afire/internal/app/manager/service/exit"
+	"afire/internal/pkg/database"
 	"afire/internal/pkg/gid"
 	"afire/pkg/tool"
 	"flag"
@@ -72,6 +73,10 @@ func start() error {
 	}
 
 	//连接db
+	log.Println("====连接db====")
+	if e := database.InitDateBase(c.DB); e != nil {
+		return errors.Wrap(e, "init database")
+	}
 
 	//连接logger
 	log.Println("====连接logger====")

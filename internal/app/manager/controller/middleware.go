@@ -24,11 +24,11 @@ const (
 func SetRequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var id string
-		if reqid := c.Request.Header.Get(XRequestID); len(reqid) == 0 {
+		if reqID := c.Request.Header.Get(XRequestID); len(reqID) == 0 {
 			id = uuid.New().String()
 			c.Request.Header.Add(XRequestID, id)
 		} else {
-			id = reqid
+			id = reqID
 		}
 		c.Header(XRequestID, id)
 		goroutineID := logger.GetGID()

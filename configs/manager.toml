@@ -11,8 +11,8 @@ card_interval_time = "4s"
 [db]
     [db.afire]
     type = "mysql" #mysql postgres
-    master_uri = "" #数据库的路由
-    slave_uris = [""] #同上
+    master_uri = "root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s" #数据库的路由
+    slave_uris = ["root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s"] #同上
     log_mode = true
     max_idle_conns = 1
     max_open_conns = 20
