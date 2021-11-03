@@ -12,8 +12,22 @@ type resUserInfo struct {
 	Phone string `json:"phone"`
 }
 
+// LoginReq 登录参数
+type LoginReq struct {
+	UID string `json:"uid" binding:"required"`
+	Pwd string `json:"pwd" binding:"required"`
+}
+
 // UserInfo 用户详情
 func UserInfo(c *gin.Context) {
-	c.String(http.StatusOK, "hello word")
+	req := LoginReq{}
+	if err := c.BindJSON(&req); err != nil {
+		log.Errorw("login",
+			"bind_err",
+			err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(1, "用户名/密码错误"))
+		return
+	}
+
 	return
 }
