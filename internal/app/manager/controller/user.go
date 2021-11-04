@@ -25,7 +25,7 @@ func UserInfo(c *gin.Context) {
 		log.Errorw("login",
 			"bind_err",
 			err.Error())
-		c.JSON(http.StatusBadRequest, responseWithStatus(1, "用户名/密码错误"))
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "用户名/密码错误"))
 		return
 	}
 
