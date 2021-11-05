@@ -21,7 +21,7 @@ func SyncInitHTTP(cfg configs.ManagerConfig) error {
 	})))
 	gin.SetMode(cfg.HTTP.Mode)
 	r.Use(controller.SetRequestID())
-	v1 := r.Group("/v1",controller.CheckLogin())
+	v1 := r.Group("/v1",controller.CheckLogin(),controller.CheckUserRole())
 
 	addUserRoute(v1)
 	return r.Run(cfg.HTTP.Listen)

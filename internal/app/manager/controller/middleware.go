@@ -8,8 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/storyicon/grbac"
 	"github.com/sunreaver/logger"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -170,6 +172,74 @@ func SetRequestID() gin.HandlerFunc {
 			gid.GetGidMap().Store(goroutineID, id)
 			defer gid.GetGidMap().Delete(goroutineID)
 		}
+		c.Next()
+	}
+}
+
+// CheckUserRole 检测用户是否有权限
+func CheckUserRole() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if strings.HasSuffix(c.FullPath(), "/login") {
+			c.Next()
+			return
+		}
+		ui := c.MustGet(userinfo).(*UserInfoInCatch)
+		if ui.IsAdmin() {
+			// 超管逻辑
+			c.Next()
+			return
+		}
+
+		tmpPath := c.Request.URL.Path
+		if !strings.HasSuffix(tmpPath, "/") {
+			tmpPath += "/"
+		}
+
+		p, e := business.RBAC().IsQueryGranted(&grbac.Query{
+			Path:   tmpPath,
+			Host:   c.Request.Host,
+			Method: c.Request.Method,
+		}, ui.Character)
+		if e != nil {
+			c.String(http.StatusOK, "校验权限失败: %v", e.Error())
+			c.Abort()
+			return
+		} else if !p.IsGranted() {
+			log.Warnw("permission",
+				"res", ui.Resources,
+				"err", p.String(),
+			)
+			c.JSON(http.StatusOK, responseWithStatus(2, business.ErrPrimitted.Error()))
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+// PageChecker 分页检查器.
+// 例如使用offset，则c.GetInt(offset) .
+func PageChecker() gin.HandlerFunc {
+	return PageCheckerWithSize(100)
+}
+
+// PageCheckerWithSize 分页检查器.
+// 例如使用offset，则c.GetInt(offset) .
+func PageCheckerWithSize(maxSize int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		off, e1 := strconv.Atoi(c.DefaultQuery("offset", "0"))
+		s, e2 := strconv.Atoi(c.DefaultQuery("size", "20"))
+		if e1 != nil || e2 != nil {
+			c.String(http.StatusBadRequest, "分页参数错误: size: %v, offset: %v", c.Query("size"), c.Query("offset"))
+			c.Abort()
+
+			return
+		}
+		if s > maxSize {
+			s = maxSize
+		}
+		c.Set(offset, off)
+		c.Set(size, s)
 		c.Next()
 	}
 }
