@@ -18,9 +18,9 @@ card_interval_time = "4s"
     max_open_conns = 20
 
 [redis]
-hosts = [""] #redis的ip
+hosts = ["127.0.0.1:6379"] #redis的ip
 password = ""
-prefix = "" #名称如 afire:
+prefix = "afire:" #名称如 afire:
 dial_timeout = "3s"
 write_timeout = "5s"
 read_timeout = "5s"
