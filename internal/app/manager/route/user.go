@@ -9,7 +9,10 @@ func addUserRoute(r *gin.RouterGroup) {
 	user := r.Group("/user")
 
 	s := user.Group("/self")
+	m := user.Group("manager")
 
-	s.GET("/login", controller.UserInfo)
+	s.POST("/login", controller.UserInfo)
 	s.POST("/logout")
+
+	m.POST("/login")
 }
