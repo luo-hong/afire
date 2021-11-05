@@ -29,5 +29,6 @@ func UserInfo(c *gin.Context) {
 		return
 	}
 
+	//检查afire用户
 	return
 }

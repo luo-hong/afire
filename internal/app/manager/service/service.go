@@ -5,8 +5,10 @@ import (
 	"afire/internal/app/manager/business"
 	"afire/internal/app/manager/route"
 	"afire/internal/app/manager/service/exit"
+	"afire/internal/pkg/catch"
 	"afire/internal/pkg/database"
 	"afire/internal/pkg/gid"
+	"afire/pkg/models"
 	"afire/pkg/tool"
 	"flag"
 	"github.com/pkg/errors"
@@ -78,6 +80,12 @@ func start() error {
 		return errors.Wrap(e, "init database")
 	}
 
+	//连接redis
+	log.Println("====连接redis====")
+	if e := catch.InitRedis(c.Redis); e != nil {
+		return errors.Wrap(e, "init redis")
+	}
+
 	//连接logger
 	log.Println("====连接logger====")
 	//创建logger
@@ -92,6 +100,13 @@ func start() error {
 	}
 
 	//初始化表
+	log.Println("models")
+	// 初始化表
+	e = models.InitModels(database.AFIREMaster())
+	if e != nil {
+		return errors.Wrap(e, "init models")
+	}
+
 	log.Println("====logger正常====")
 	cfg = *c
 	l = logger.GetSugarLogger("manager.log")

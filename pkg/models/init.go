@@ -14,9 +14,9 @@ func createDB(db *gorm.DB, table interface{}) error {
 func InitModels(db *gorm.DB) error {
 	var e error
 
-	// 创建user表 用户表
+	// 创建user表 用户信息表
 	fmt.Println("[models] user")
-	//userField, userPreload, e = MakeFields(db, &User{}) // 后续匹配数据用到的参数
+	userField, userPreload, e = MakeFields(db, &User{}) // 后续匹配数据用到的参数
 	if e != nil {
 		return errors.Wrap(e, "auto fields users")
 	}
@@ -25,15 +25,37 @@ func InitModels(db *gorm.DB) error {
 		return errors.Wrap(e, "auto migrate users")
 	}
 
-	// 创建user_character表 用户权限表
+	// 创建user_character表 用户匹配表
 	fmt.Println("[models] user character")
-	//userCharacterField, userCharacterPreload, e = MakeFields(db, &UserCharacter{})
+	userCharacterField, userCharacterPreload, e = MakeFields(db, &UserCharacter{})
 	if e != nil {
 		return errors.Wrap(e, "auto fields user_character")
 	}
 	e = createDB(db, &UserCharacter{})
 	if e != nil {
 		return errors.Wrap(e, "auto migrate user_character")
+	}
+
+	// 创建character表  角色信息表
+	fmt.Println("[models] character")
+	characterField, characterPreload, e = MakeFields(db, &Character{})
+	if e != nil {
+		return errors.Wrap(e, "auto fields character")
+	}
+	e = createDB(db, &Character{})
+	if e != nil {
+		return errors.Wrap(e, "auto migrate character")
+	}
+
+	// 创建character res表 用户的资源表
+	fmt.Println("[models] character res")
+	characterResourceField, characterResourcePreload, e = MakeFields(db, &CharacterResource{})
+	if e != nil {
+		return errors.Wrap(e, "auto fields character_resource")
+	}
+	e = createDB(db, &CharacterResource{})
+	if e != nil {
+		return errors.Wrap(e, "auto migrate character_resource")
 	}
 
 	return nil

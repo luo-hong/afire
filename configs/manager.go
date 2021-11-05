@@ -3,6 +3,7 @@ package configs
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/sunreaver/antman/v2/db"
+	"github.com/sunreaver/antman/v2/redis"
 	"github.com/sunreaver/tomlanalysis/bytesize"
 	"github.com/sunreaver/tomlanalysis/timesize"
 )
@@ -11,6 +12,7 @@ type ManagerConfig struct {
 	HTTP  ServerConfig         `toml:"server"`
 	RMG   RMGConfig            `toml:"rmg"`
 	DB    map[string]db.Config `toml:"db"`
+	Redis redis.Config         `toml:"redis"`
 	Log   LogConfig            `toml:"log"`
 	Debug DebugConfig          `toml:"debug"`
 }

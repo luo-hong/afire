@@ -17,6 +17,17 @@ card_interval_time = "4s"
     max_idle_conns = 1
     max_open_conns = 20
 
+[redis]
+hosts = [""] #redis的ip
+password = ""
+prefix = "" #名称如 afire:
+dial_timeout = "3s"
+write_timeout = "5s"
+read_timeout = "5s"
+poolsize = 10
+pool_timeout = "60s"
+db = 0
+
 [sql]
 agents = ["127.0.0.1:32113"]
 #production_ipmask = ["172.32.0.0/16"] #到时候服务器的ip,这里是举例

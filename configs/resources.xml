@@ -1,0 +1,56 @@
+<Resource>
+    <!--
+     对于多个一级菜单间 使用了同一个url，但是ID不同的情况，后端是使用url来查找 角色ID，
+     该用户有该角色就是认为可以访问，没有就认为不能访问
+    -->
+    <!-- 一级菜单：我的 -->
+    <resource>
+        <id>mine</id>
+        <name>我的</name>
+        <method>POST</method>
+        <method>PUT</method>
+        <route>/v*/universal/**</route>
+        <route>/v*/user/self/**</route>
+        <resource>
+            <id>mine.instruction</id>
+            <name>指令</name>
+            <method>POST</method>
+            <method>PUT</method>
+            <method>DELETE</method>
+            <route>/v*/instruction/**</route>
+        </resource>
+        <resource>
+            <id>mine.comment</id>
+            <name>通用操作</name>
+            <method>GET</method>
+            <route>**</route>
+        </resource>
+    </resource>
+
+    <resource>
+        <!-- review 关键字在代码中有使用，不能更换 -->
+        <id>review</id>
+        <name>审核</name>
+        <method>POST</method>
+        <method>PUT</method>
+        <route>/v*/review/**</route>
+    </resource>
+
+    <!-- 一级菜单：系统管理 -->
+    <resource>
+        <id>sysManage</id>
+        <name>系统管理</name>
+        <resource>
+            <id>sysManage.user</id>
+            <name>用户管理</name>
+            <method>*</method>
+            <route>/v*/user/manager/**</route>
+        </resource>
+        <resource>
+            <id>sysManage.role</id>
+            <name>角色管理</name>
+            <method>*</method>
+            <route>/v*/character/**</route>
+        </resource>
+    </resource>
+</Resource>

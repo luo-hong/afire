@@ -7,11 +7,12 @@ import (
 )
 
 type User struct {
-	UID   string `gorm:"column:uid;<-:create;not null;primaryKey;comment:工号" json:"id"`
-	Name  string `gorm:"column:name;not null;comment:用户名称" json:"name"`
-	Pwd   string `gorm:"column:pwd;size:64;not null;comment:密码"`
-	Phone string `gorm:"column:phone;not null;comment:手机号"`
-	Email string `gorm:"column:email;comment:邮箱"`
+	UID       string `gorm:"column:uid;<-:create;not null;primaryKey;comment:工号" json:"id"`
+	Name      string `gorm:"column:name;not null;comment:用户名称" json:"name"`
+	Pwd       string `gorm:"column:pwd;size:64;not null;comment:密码"`
+	Phone     string `gorm:"column:phone;not null;comment:手机号"`
+	ChangePWD bool   `gorm:"column:change_pwd;not null;comment:是否改过密码"`
+	Email     string `gorm:"column:email;comment:邮箱"`
 }
 
 func (m User) TableName() string {
