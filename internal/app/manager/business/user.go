@@ -150,3 +150,72 @@ func UserUpdatePwd(uid, oldPwd, newPwd string) (err error) {
 	}
 	return nil
 }
+
+type CheckoutUsersCharactersData struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// CheckUsers return: User, characters, resources, error
+func CheckUsers(uid string) (*models.User, []string, []CheckoutUsersCharactersData, error) {
+	us := models.UserSelector{
+		UID: []string{uid},
+	}
+	u, e := us.Find(database.AFIRESlave())
+	if e != nil {
+		return nil, nil, nil, errors.Wrap(e, "find user")
+	}
+	if len(u) == 0 {
+		return nil, nil, nil, errors.New("find user empty")
+	}
+	// UID 为主键不可能有多条记录
+	ucs := models.UserCharacterSelector{
+		UID: []string{u[0].UID},
+	}
+
+	out, e := ucs.CIDs(database.AFIRESlave())
+	if e != nil {
+		return nil, nil, nil, errors.Wrap(e, "check user roles")
+	}
+
+	sort.Ints(out)
+
+	charaStr := make([]string, len(out))
+	for index, v := range out {
+		charaStr[index] = fmt.Sprintf("%v", v)
+	}
+
+	charMap := map[int]string{}
+	// 查找角色详情
+	cs := models.CharacterSelector{}
+	chars, e := cs.Find(database.AFIRESlave(), "ID", "Name")
+	if e == nil {
+		for _, v := range chars {
+			charMap[v.ID] = v.Name
+		}
+	}
+
+	//resources := []CheckoutUsersCharactersData{}
+	var resources []CheckoutUsersCharactersData
+	if len(out) != 0 {
+		characterResourceSelector := models.NewCharacterResourceSelector(0, 0)
+		// 如果是超管，则返回所有资源id
+		if !IsAdmin(charaStr) {
+			characterResourceSelector.CID = out
+		}
+		var err error
+		resourcesList, err := characterResourceSelector.ResourcesID(database.AFIRESlave())
+		if err != nil {
+			return nil, nil, nil, errors.Wrap(err, "check resource")
+		}
+		for _, v := range resourcesList {
+			resources = append(resources, CheckoutUsersCharactersData{
+				ID:   v,
+				Name: charMap[v],
+			})
+
+		}
+	}
+
+	return &u[0], charaStr, resources, nil
+}

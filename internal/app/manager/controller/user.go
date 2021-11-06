@@ -211,3 +211,36 @@ func UserUpdatePwd(c *gin.Context) {
 	_ = business.NewOperation(c.GetHeader(XRequestID), ui,
 		OpUserUpdate, req, true, nil)
 }
+
+type resUserInfoV2 struct {
+	Name      string                                 `json:"name"`
+	UID       string                                 `json:"uid"`
+	Email     string                                 `json:"email"`
+	Phone     string                                 `json:"phone"`
+	Resources []business.CheckoutUsersCharactersData `json:"resources"`
+}
+
+// UserInfoV2 管理查看用户信息
+func UserInfoV2(c *gin.Context)  {
+	uid := c.Param("uid")
+	u, _, resources, err := business.CheckUsers(uid)
+	if err != nil {
+		log.Errorw("user_info_v2",
+			"uid", uid,
+			"err", err.Error())
+		c.JSON(http.StatusOK, responseWithStatus(-1, err.Error()))
+		return
+	}
+
+	res := resUserInfoV2{
+		Name:      u.Name,
+		UID:       u.UID,
+		Email:     u.Email,
+		Phone:     u.Phone,
+		Resources: resources,
+	}
+
+	c.JSON(http.StatusOK, UniversalRespByData{
+		Data: res,
+	})
+}
