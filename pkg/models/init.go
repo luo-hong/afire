@@ -58,6 +58,16 @@ func InitModels(db *gorm.DB) error {
 		return errors.Wrap(e, "auto migrate character_resource")
 	}
 
+	// 创建operation表  记录用户操作详情
+	operationFields, _, e = MakeFields(db, &Operation{})
+	if e != nil {
+		return errors.Wrap(e, "make fields operation")
+	}
+	e = createDB(db, &Operation{})
+	if e != nil {
+		return errors.Wrap(e, "auto migrate operation")
+	}
+
 	return nil
 }
 

@@ -26,16 +26,6 @@
             <route>**</route>
         </resource>
     </resource>
-
-    <resource>
-        <!-- review 关键字在代码中有使用，不能更换 -->
-        <id>review</id>
-        <name>审核</name>
-        <method>POST</method>
-        <method>PUT</method>
-        <route>/v*/review/**</route>
-    </resource>
-
     <!-- 一级菜单：系统管理 -->
     <resource>
         <id>sysManage</id>

@@ -10,12 +10,13 @@ import (
 	"sort"
 )
 
+// IsAdmin 是否是管理员
 func IsAdmin(character []string) bool {
 	return len(character) > 0 && character[0] == "1"
 }
 
 // CheckUser 检查用户是否匹配
-func CheckUser(uid,pwd string) (*models.User,[]string,[]string,error) {
+func CheckUser(uid, pwd string) (*models.User, []string, []string, error) {
 	us := models.UserSelector{
 		UID: []string{uid},
 	}
@@ -67,4 +68,48 @@ func CheckUser(uid,pwd string) (*models.User,[]string,[]string,error) {
 	sort.Strings(resources)
 
 	return &u[0], charaStr, resources, nil
+}
+
+// UpdateUser 更新用户信息  characters 如果为nil，则不修改characters
+func UpdateUser(uid, name, phone, email string, characters []int) (err error) {
+	us := models.UserSelector{
+		UID: []string{uid},
+	}
+	userList, e := us.Find(database.AFIRESlave())
+	if e != nil {
+		return errors.Wrap(e, "find user")
+	}
+	if len(userList) == 0 {
+		return errors.New("find user empty")
+	}
+
+	if characters != nil {
+		// 批量删除用户角色关系（硬删）
+		e = models.UserCharacterBatchDelete(database.AFIREMaster(), uid, []int{})
+		if e != nil {
+			return errors.Wrap(e, "BatchDelete UserCharacter")
+		}
+
+		ucList := make([]models.UserCharacter, 0)
+		for _, v := range characters {
+			ucList = append(ucList, models.UserCharacter{UID: uid, CID: v})
+		}
+
+		// 批量插入用户角色关系
+		e = models.UserCharacterBatchInsert(database.AFIREMaster(), ucList)
+		if e != nil {
+			return errors.Wrap(e, "BatchInsert UserCharacter")
+		}
+	}
+
+	// 修改用户信息
+	userList[0].Name = name
+	userList[0].Phone = phone
+	userList[0].Email = email
+	e = userList[0].Update(database.AFIREMaster())
+	if e != nil {
+		return errors.Wrap(e, "user_update")
+	}
+
+	return nil
 }
