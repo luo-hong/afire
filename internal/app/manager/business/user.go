@@ -113,3 +113,40 @@ func UpdateUser(uid, name, phone, email string, characters []int) (err error) {
 
 	return nil
 }
+
+// UserUpdatePwd 用户自己更新密码
+func UserUpdatePwd(uid, oldPwd, newPwd string) (err error) {
+	funcName := "user_update_pwd"
+	us := models.UserSelector{
+		UID: []string{uid},
+	}
+	userList, e := us.Find(database.AFIRESlave())
+	if e != nil {
+		return errors.Wrap(e, "find user")
+	}
+	if len(userList) == 0 {
+		return errors.New("find user empty")
+	}
+	// 验证用户名和密码匹配
+	oldEncryptedPwd := sm3.Sm3Sum([]byte(oldPwd + UserDefaultPWDSalt))
+	log.Infow(funcName, "uid", uid, "oldPwd", oldPwd, "oldEncryptedPwd", hex.EncodeToString(oldEncryptedPwd))
+	if userList[0].Pwd != hex.EncodeToString(oldEncryptedPwd) {
+		return errors.New("username do not match password")
+	}
+	// 更新密码
+	newEncryptedPwd := sm3.Sm3Sum([]byte(newPwd + UserDefaultPWDSalt))
+	log.Infow(funcName, "uid", uid, "newPwd", newPwd, "newEncryptedPwd", hex.EncodeToString(newEncryptedPwd))
+
+	user := models.User{
+		UID:       uid,
+		ChangePWD: UserChangePWDYes,
+		Pwd:       hex.EncodeToString(newEncryptedPwd),
+	}
+
+	e = user.UpdatePwd(database.AFIREMaster())
+	if e != nil {
+		log.Errorw(funcName, "update_err", e.Error())
+		return errors.Wrap(e, funcName)
+	}
+	return nil
+}

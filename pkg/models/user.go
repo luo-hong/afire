@@ -56,6 +56,14 @@ func (m User) UpdateByColumn(db *gorm.DB, columns ...string) error {
 	return db.Table(m.TableName()).Where("uid=?", m.UID).Updates(upMap).Error
 }
 
+func (m *User) UpdatePwd(db *gorm.DB) error {
+	data := map[string]interface{}{
+		"pwd":        m.Pwd,
+		"change_pwd": m.ChangePWD,
+	}
+	return db.Table(m.TableName()).Where("uid = ?", m.UID).Updates(data).Error
+}
+
 func (m User) Delete(db *gorm.DB) error {
 	if m.UID == "" {
 		return errors.New("user uid is empty")

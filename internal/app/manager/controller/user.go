@@ -135,36 +135,36 @@ type UpdateUserInfoReq struct {
 // UpdateUserInfo 用户更新信息
 func UpdateUserInfo(c *gin.Context) {
 	req := UpdateUserInfoReq{}
-	if err := c.BindJSON(&req); err != nil{
+	if err := c.BindJSON(&req); err != nil {
 		log.Errorw("update_user",
 			"bind_err",
 			err.Error())
-		c.JSON(http.StatusBadRequest,responseWithStatus(0,"参数错误"+err.Error()))
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误"+err.Error()))
 		return
 	}
-	log.Infow("update_user","form",req)
+	log.Infow("update_user", "form", req)
 	ui := c.MustGet(userinfo).(*UserInfoInCatch)
 	var err error
 	defer func() {
-		if err == nil{
+		if err == nil {
 			// 修改缓存
 			if len(req.Name) > 0 {
 				ui.Name = req.Name
 			}
-			if len(req.Phone) >0 {
+			if len(req.Phone) > 0 {
 				ui.Phone = req.Phone
 			}
-			if len(req.Email) >0 {
+			if len(req.Email) > 0 {
 				ui.Email = req.Email
 			}
-			data,_ := json.Marshal(ui)
+			data, _ := json.Marshal(ui)
 			cli := catch.Cli()
-			e := cli.Set(catch.KeyWithPrefix(catchUIDKey+ui.UID),data,cfg.HTTP.CookieTimeout.Duration()).Err()
-			log.Debugw("update_user","new_catch",string(data),"err",e)
+			e := cli.Set(catch.KeyWithPrefix(catchUIDKey+ui.UID), data, cfg.HTTP.CookieTimeout.Duration()).Err()
+			log.Debugw("update_user", "new_catch", string(data), "err", e)
 		}
 	}()
 
-	err = business.UpdateUser(ui.GetUID(),req.Name,req.Phone,req.Email,nil)
+	err = business.UpdateUser(ui.GetUID(), req.Name, req.Phone, req.Email, nil)
 	if err != nil {
 		log.Errorw("update_user",
 			"err", err.Error(),
@@ -179,7 +179,35 @@ func UpdateUserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, responseWithStatus(1, "更新成功"))
 }
 
+type UserUpdatePwdReq struct {
+	OldPwd string `json:"old_pwd" binding:"required"`
+	NewPwd string `json:"new_pwd" binding:"required"`
+}
+
 // UserUpdatePwd 用户更新密码
 func UserUpdatePwd(c *gin.Context) {
+	req := UserUpdatePwdReq{}
+	if err := c.BindJSON(&req); err != nil {
+		log.Errorw("user_update_pwd",
+			"bind_err",
+			err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误:"+err.Error()))
+		return
+	}
+	ui := c.MustGet(userinfo).(*UserInfoInCatch)
+	err := business.UserUpdatePwd(ui.UID, req.OldPwd, req.NewPwd)
+	if err != nil {
+		log.Errorw("user_update_pwd",
+			"err", err.Error(),
+			"uid", ui.UID,
+			"req", req)
+		c.JSON(http.StatusBadRequest, responseWithStatus(-1, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), ui,
+			OpUserUpdate, req, false, err)
+		return
+	}
 
+	c.JSON(http.StatusOK, responseWithStatus(1, "更新成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), ui,
+		OpUserUpdate, req, true, nil)
 }
