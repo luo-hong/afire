@@ -18,4 +18,5 @@ func addUserRoute(r *gin.RouterGroup) {
 	s.PUT("/update_pwd", controller.UserUpdatePwd) // 用户更新密码
 
 	m.GET("/info/:uid", controller.UserInfoV2) // 管理查看用户详情
+	m.GET("list", controller.CheckoutUser)     // 获取用户列表
 }

@@ -3,6 +3,7 @@ package business
 import (
 	"afire/internal/pkg/database"
 	"afire/pkg/models"
+	"afire/pkg/tool"
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
@@ -218,4 +219,110 @@ func CheckUsers(uid string) (*models.User, []string, []CheckoutUsersCharactersDa
 	}
 
 	return &u[0], charaStr, resources, nil
+}
+
+type CheckoutUsersForm struct {
+	UID       string `form:"uid"`
+	Name      string `form:"name"`
+	Character int    `form:"character"`
+	Offset    int    `form:"-"`
+	Size      int    `form:"-"`
+}
+
+type CheckoutUsersData struct {
+	UID        string                        `json:"uid"`
+	Name       string                        `json:"name"`
+	Phone      string                        `json:"phone"`
+	Characters []CheckoutUsersCharactersData `json:"characters"`
+}
+
+// CheckoutUsers return: 用户信息、个数、错误
+func CheckoutUsers(form CheckoutUsersForm) ([]CheckoutUsersData, int, error) {
+	var us models.UserSelector
+	if len(form.UID) > 0 {
+		us.UID = []string{form.UID}
+	} else if form.Character > 0 {
+		//先根据角色查用户
+		ucs := models.UserCharacterSelector{
+			CID: []int{form.Character},
+		}
+		uids, e := ucs.UIDs(database.AFIRESlave())
+		if e != nil {
+			return nil, 0, errors.WithMessagef(e, "find uids with character: %v", form.Character)
+		}
+		us.UID = uids
+	}
+	if len(form.Name) > 0 {
+		us.NameLike = tool.MakeFuzzyFiled(form.Name, tool.ContainsFuzzyFiled)
+	}
+	us.PageSelector = models.MakePageSelector(form.Offset, form.Size)
+	count, e := us.Count(database.AFIRESlave())
+	if e != nil {
+		return nil, 0, errors.Wrap(e, "count")
+	}
+
+	userList, e := us.Find(database.AFIRESlave(), "UID", "Name", "Phone")
+	if e != nil {
+		return nil, 0, errors.WithMessagef(e, "find users with form: %v", us)
+	} else if len(userList) == 0 {
+		return []CheckoutUsersData{}, 0, nil
+	}
+
+	//补全用户的角色
+	uids := make([]string, len(userList))
+	for index, v := range userList {
+		uids[index] = v.UID
+	}
+	//查找关联角色
+	ucs := models.UserCharacterSelector{
+		UID: uids,
+	}
+	uidAndCidList, e := ucs.Find(database.AFIRESlave(), "UID", "CID")
+	if e != nil {
+		return nil, 0, errors.Wrap(e, "find cids")
+	}
+	uid2CidMap := map[string][]int{}
+	cidList := make([]int, len(uidAndCidList))
+	for index, v := range uidAndCidList {
+		if _, ok := uid2CidMap[v.UID]; !ok {
+			uid2CidMap[v.UID] = []int{}
+		}
+		uid2CidMap[v.UID] = append(uid2CidMap[v.UID], v.CID)
+		cidList[index] = v.CID
+	}
+	charMap := map[int]string{} // 角色中文名表
+	if len(cidList) > 0 {
+		// 查找角色的中文名
+		cs := models.CharacterSelector{
+			ID: cidList,
+		}
+		chars, e := cs.Find(database.AFIRESlave(), "ID", "Name")
+		if e == nil {
+			for _, v := range chars {
+				charMap[v.ID] = v.Name
+			}
+		}
+	}
+
+	// 组装结果集合
+	outList := make([]CheckoutUsersData, len(userList))
+	for index, u := range userList {
+		outList[index] = CheckoutUsersData{
+			UID:   u.UID,
+			Name:  u.Name,
+			Phone: u.Phone,
+		}
+		uc := uid2CidMap[u.UID]
+		chars := make([]CheckoutUsersCharactersData, len(uc))
+		for index, v := range uc {
+			c := CheckoutUsersCharactersData{
+				ID:   v,
+				Name: charMap[v],
+			}
+			chars[index] = c
+		}
+		outList[index].Characters = chars
+	}
+
+	return outList, int(count), nil
 }

@@ -221,7 +221,7 @@ type resUserInfoV2 struct {
 }
 
 // UserInfoV2 管理查看用户信息
-func UserInfoV2(c *gin.Context)  {
+func UserInfoV2(c *gin.Context) {
 	uid := c.Param("uid")
 	u, _, resources, err := business.CheckUsers(uid)
 	if err != nil {
@@ -243,4 +243,27 @@ func UserInfoV2(c *gin.Context)  {
 	c.JSON(http.StatusOK, UniversalRespByData{
 		Data: res,
 	})
+}
+
+// CheckoutUser 获取用户列表
+func CheckoutUser(c *gin.Context) {
+	var form business.CheckoutUsersForm
+	if e := c.Bind(&form); e != nil {
+		log.Errorw("checkout_users",
+			"err", e.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误"+e.Error()))
+		return
+	}
+
+	form.Offset = c.GetInt(offset)
+	form.Size = c.GetInt(size)
+	out, count, e := business.CheckoutUsers(form)
+	if e != nil {
+		log.Errorw("checkout_users",
+			"form", form,
+			"err", e.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, responseWithData(out, count, form.Size, form.Offset, ""))
 }
