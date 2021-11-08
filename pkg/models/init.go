@@ -59,6 +59,7 @@ func InitModels(db *gorm.DB) error {
 	}
 
 	// 创建operation表  记录用户操作详情
+	fmt.Println("[models] operations")
 	operationFields, _, e = MakeFields(db, &Operation{})
 	if e != nil {
 		return errors.Wrap(e, "make fields operation")
