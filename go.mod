@@ -15,6 +15,7 @@ require (
 	github.com/sunreaver/logger v1.0.3
 	github.com/sunreaver/tomlanalysis v1.0.0
 	github.com/tjfoc/gmsm v1.4.1
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gorm.io/gorm v1.20.7
 )
 
