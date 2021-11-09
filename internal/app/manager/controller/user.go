@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -297,4 +298,51 @@ func UserFind(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, responseWithData(list, int(count), size, offset, ""))
+}
+
+type UpdateUserManagerReq struct {
+	UpdateUserInfoReq
+	Character []int `json:"characters"` // 角色
+}
+
+type UserCreateReq struct {
+	UID string `json:"uid" binding:"required"`
+	UpdateUserManagerReq
+}
+
+func (r *UserCreateReq) Validate() error {
+	if len(r.Character) == 0 {
+		return errors.New("角色列表为空")
+	}
+	return nil
+}
+
+// UserCreate 新增创建用户
+func UserCreate(c *gin.Context) {
+	funcName := "user_create"
+	reqID := c.GetHeader(XRequestID)
+	req := UserCreateReq{}
+	if err := c.BindJSON(&req); err != nil {
+		log.Errorw(funcName, "bind_err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误"+err.Error()))
+		return
+	}
+	if err := req.Validate(); err != nil {
+		log.Errorw(funcName, "param_valid", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+
+	u, err := business.UserCreate(req.UID, req.Name, req.Phone, req.Email, req.Character)
+	if err != nil {
+		log.Errorw(funcName, "err", err.Error(), "req_id", reqID, "req", req)
+		c.JSON(http.StatusOK, responseWithStatus(-1, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpUserAdd, req, false, err)
+		return
+	}
+
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpUserAdd, req, true, nil)
+	c.JSON(http.StatusOK, responseWithData(u, 0, 0, 0, ""))
 }

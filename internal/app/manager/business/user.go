@@ -4,6 +4,7 @@ import (
 	"afire/internal/pkg/database"
 	"afire/pkg/models"
 	"afire/pkg/tool"
+	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
@@ -364,4 +365,73 @@ func UserList(name string, offset, size *int) (result []UserFindRes, c int64, er
 	}
 
 	return
+}
+
+type UserRes struct {
+	UID        string   `json:"uid"`
+	Name       string   `json:"name"`
+	Phone      string   `json:"phone"`
+	Resources  []string `json:"resources"`
+	Characters []int    `json:"characters"`
+}
+
+// UserCreate 新增创建新用户
+func UserCreate(uid, name, phone, email string, characters []int) (result *UserRes, err error) {
+	us := models.UserSelector{
+		UID: []string{uid},
+	}
+	userList, e := us.Find(database.AFIRESlave())
+	if e != nil {
+		return nil, errors.Wrap(e, "find user")
+	}
+	if len(userList) != 0 {
+		return nil, errors.New("UID重复")
+	}
+
+	byt := []byte(UserDefaultPWD + uid)
+	md5byte := md5.Sum(byt)
+	pwd := hex.EncodeToString(md5byte[:])
+	// 以上模拟login时传参md5(密码 + uid)
+	h64byte := []byte(pwd + UserDefaultPWDSalt)
+	encryptedPwd := sm3.Sm3Sum(h64byte)
+	log.Infow("create_user", "uid", uid,
+		"md5", hex.EncodeToString(md5byte[:]),
+		"pwd", hex.EncodeToString(encryptedPwd),
+	)
+
+	user := models.User{
+		UID:       uid,
+		Name:      name,
+		Phone:     phone,
+		Email:     email,
+		ChangePWD: UserChangePWDNO,
+		Pwd:       hex.EncodeToString(encryptedPwd),
+	}
+
+	e = user.Insert(database.AFIREMaster())
+	if e != nil {
+		return nil, errors.Wrap(e, "insert user")
+	}
+
+	ucList := make([]models.UserCharacter, 0)
+	for _, v := range characters {
+		ucList = append(ucList, models.UserCharacter{
+			UID: uid,
+			CID: v,
+		})
+	}
+
+	// 批量插入用户角色关系
+	e = models.UserCharacterBatchInsert(database.AFIREMaster(), ucList)
+	if e != nil {
+		return nil, errors.Wrap(e, "BatchInsert UserCharacter")
+	}
+
+	return &UserRes{
+		UID:        uid,
+		Name:       name,
+		Phone:      phone,
+		Resources:  []string{},
+		Characters: characters,
+	}, nil
 }

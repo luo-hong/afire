@@ -20,4 +20,5 @@ func addUserRoute(r *gin.RouterGroup) {
 	m.GET("/info/:uid", controller.UserInfoV2)                       // 管理查看用户详情
 	m.GET("list", controller.PageChecker(), controller.CheckoutUser) // 获取用户列表
 	m.GET("find", controller.PageChecker(), controller.UserFind)     // 查询用户列表
+	m.POST("", controller.UserCreate)                                // 增加新用户
 }
