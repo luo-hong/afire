@@ -365,3 +365,40 @@ func ResetPwd(c *gin.Context) {
 		OpUserResetPwd, uid, true, nil)
 	c.JSON(http.StatusOK, responseWithStatus(1, "重置密码成功"))
 }
+
+// UpdateUserManager 更新用户信息
+func UpdateUserManager(c *gin.Context) {
+	req := UpdateUserManagerReq{}
+	if err := c.BindJSON(&req); err != nil {
+		log.Errorw("update_user_manager", "bind_err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误"+err.Error()))
+		return
+	}
+	log.Infow("update_user_manager", "form", req)
+
+	ui := c.MustGet(userinfo).(*UserInfoInCatch)
+	var err error
+	defer func() {
+		if err == nil {
+			//踢更新用户下线
+			cli := catch.Cli()
+			e := cli.Del(catch.KeyWithPrefix(catchUIDKey + c.Param("uid"))).Err()
+			log.Debugw("update_user_manager", "form", req,
+				"editor", ui.UID, "err", e)
+		}
+	}()
+
+	err = business.UpdateUser(c.Param("uid"), req.Name, req.Phone, req.Email, req.Character)
+	if err != nil {
+		log.Errorw("update_user", "err", err.Error(),
+			"uid", c.Param("uid"), "req", req)
+		c.JSON(http.StatusOK, responseWithStatus(0, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), ui,
+			OpUserUpdate, req, false, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, responseWithStatus(1, "更新成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), ui,
+		OpUserUpdate, req, true, nil)
+}
