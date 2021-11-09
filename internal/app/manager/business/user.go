@@ -454,3 +454,28 @@ func ResetUserPwd(uid string) (err error) {
 
 	return nil
 }
+
+// DeleteUser 删除用户
+func DeleteUser(uid string) (err error) {
+	tx := database.AFIREMaster().Begin()
+	defer tx.Rollback()
+	// 删除user表中的数据
+	user := models.User{
+		UID: uid,
+	}
+	userErr := user.Delete(tx)
+	if userErr != nil {
+		return userErr
+	}
+
+	// 删除user_character表中的数据
+	char := models.UserCharacter{
+		UID: uid,
+	}
+	charErr := char.Delete(tx)
+	if charErr != nil {
+		return charErr
+	}
+
+	return tx.Commit().Error
+}

@@ -23,4 +23,5 @@ func addUserRoute(r *gin.RouterGroup) {
 	m.POST("", controller.UserCreate)                                // 增加新用户
 	m.PUT("reset_pwd/:uid", controller.ResetPwd)                     // 重置用户密码
 	m.PUT("update/:uid", controller.UpdateUserManager)               // 更新用户信息
+	m.DELETE("/info/:uid", controller.DeleteUser)                    // 删除用户
 }

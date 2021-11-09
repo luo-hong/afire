@@ -402,3 +402,20 @@ func UpdateUserManager(c *gin.Context) {
 	_ = business.NewOperation(c.GetHeader(XRequestID), ui,
 		OpUserUpdate, req, true, nil)
 }
+
+// DeleteUser 删除用户
+func DeleteUser(c *gin.Context) {
+	uid := c.Param("uid")
+	if uid == "" {
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "uid is empty"))
+		return
+	}
+	err := business.DeleteUser(uid)
+	if err != nil {
+		log.Errorw("del_user", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, responseWithStatus(1, "删除成功"))
+}
