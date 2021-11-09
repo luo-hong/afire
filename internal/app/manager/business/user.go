@@ -326,3 +326,42 @@ func CheckoutUsers(form CheckoutUsersForm) ([]CheckoutUsersData, int, error) {
 
 	return outList, int(count), nil
 }
+
+type UserFindRes struct {
+	UID   string `json:"uid"`
+	Name  string `json:"name"`
+	Phone string `json:"phone"`
+}
+
+// UserList 查询用户列表
+func UserList(name string, offset, size *int) (result []UserFindRes, c int64, err error) {
+	us := models.UserSelector{
+		UIDOrName: name,
+		PageSelector: models.PageSelector{
+			Offset: offset,
+			Limit:  size,
+		},
+	}
+	c, e := us.Count(database.AFIRESlave())
+	if e != nil {
+		return nil, 0, errors.Wrap(e, "find user")
+	}
+	if c == 0 {
+		return []UserFindRes{}, c, nil
+	}
+	userList, e := us.Find(database.AFIRESlave())
+	if e != nil {
+		return nil, 0, errors.Wrap(e, "find user")
+	}
+
+	result = make([]UserFindRes, 0)
+	for _, v := range userList {
+		result = append(result, UserFindRes{
+			UID:   v.UID,
+			Name:  v.Name,
+			Phone: v.Phone,
+		})
+	}
+
+	return
+}

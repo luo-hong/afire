@@ -267,3 +267,34 @@ func CheckoutUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, responseWithData(out, count, form.Size, form.Offset, ""))
 }
+
+type UserFindReq struct {
+	Name string `form:"name" json:"name"`
+}
+
+// UserFind 模糊查询用户列表
+func UserFind(c *gin.Context) {
+	funcName := "user_find"
+	reqID := c.GetHeader(XRequestID)
+	req := UserFindReq{}
+	if err := c.BindQuery(&req); err != nil {
+		log.Errorw(funcName,
+			"param_valid",
+			err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "参数错误"+err.Error()))
+	}
+	log.Debugw(funcName, "req", req)
+	offset := c.GetInt(offset)
+	size := c.GetInt(size)
+	list, count, err := business.UserList(req.Name, &offset, &size)
+	if err != nil {
+		log.Errorw(funcName,
+			"err", err.Error(),
+			"req_id", reqID,
+			"req", req)
+		c.JSON(http.StatusOK, responseWithStatus(-1, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, responseWithData(list, int(count), size, offset, ""))
+}
