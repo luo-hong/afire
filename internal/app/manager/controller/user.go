@@ -346,3 +346,22 @@ func UserCreate(c *gin.Context) {
 		OpUserAdd, req, true, nil)
 	c.JSON(http.StatusOK, responseWithData(u, 0, 0, 0, ""))
 }
+
+// ResetPwd 重置用户密码
+func ResetPwd(c *gin.Context) {
+	uid := c.Param("uid")
+	err := business.ResetUserPwd(uid)
+	if err != nil {
+		log.Errorw("reset_pwd", "err", err.Error(), "uid", uid)
+		c.JSON(http.StatusOK, responseWithStatus(-1, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpUserResetPwd, uid, false, err)
+		return
+	}
+
+	cli := catch.Cli()
+	_ = cli.Del(catch.KeyWithPrefix(catchUIDKey + c.Param("uid"))).Err()
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpUserResetPwd, uid, true, nil)
+	c.JSON(http.StatusOK, responseWithStatus(1, "重置密码成功"))
+}

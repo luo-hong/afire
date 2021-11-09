@@ -435,3 +435,22 @@ func UserCreate(uid, name, phone, email string, characters []int) (result *UserR
 		Characters: characters,
 	}, nil
 }
+
+// ResetUserPwd 重置用户密码
+func ResetUserPwd(uid string) (err error) {
+	//更新密码
+	pwd := md5.Sum([]byte(UserDefaultPWD + uid))
+	newEncryptedPwd := sm3.Sm3Sum([]byte(hex.EncodeToString(pwd[:]) + UserDefaultPWDSalt))
+	user := models.User{
+		UID:       uid,
+		ChangePWD: UserChangePWDNO,
+		Pwd:       hex.EncodeToString(newEncryptedPwd),
+	}
+	e := user.UpdatePwd(database.AFIREMaster())
+	if e != nil {
+		log.Errorw("user_reset_pwd", "err", e.Error())
+		return errors.Wrap(e, "user reset pwd")
+	}
+
+	return nil
+}
