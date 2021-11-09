@@ -1,9 +1,11 @@
 package controller
 
-// OperationType
 var OperationType map[string]string
 
 const (
+	// Count 默认数值
+	Count = 21
+
 	OpUserAdd    = "user_add"
 	OpUserAddStr = "创建用户"
 
