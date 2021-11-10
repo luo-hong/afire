@@ -472,7 +472,7 @@ func DeleteUser(uid string) (err error) {
 	char := models.UserCharacter{
 		UID: uid,
 	}
-	charErr := char.Delete(tx)
+	charErr := char.DeleteUserCharacter(tx)
 	if charErr != nil {
 		return charErr
 	}
