@@ -10,6 +10,7 @@ import (
 	"afire/internal/pkg/gid"
 	"afire/pkg/models"
 	"afire/pkg/tool"
+	"afire/version"
 	"flag"
 	"github.com/pkg/errors"
 	"github.com/sunreaver/logger"
@@ -61,8 +62,13 @@ func init() {
 func start() error {
 	var configFile string
 	flag.StringVar(&configFile, "c", "", "config file")
-	//v := flag.Bool("v",false,"show version")
+	v := flag.Bool("v", false, "show version")
 	flag.Parse()
+
+	if *v {
+		log.Println(":\n%v", version.Show())
+		os.Exit(0)
+	}
 
 	if e := tool.SetDBKey([]byte(os.Getenv("DBKEY"))); e != nil {
 		log.Fatalln("get Env: \"DBKEY\" err:", e.Error())
