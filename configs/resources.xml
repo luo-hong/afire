@@ -9,7 +9,6 @@
         <name>我的</name>
         <method>POST</method>
         <method>PUT</method>
-        <route>/v*/universal/**</route>
         <route>/v*/user/self/**</route>
         <resource>
             <id>mine.comment</id>
@@ -18,6 +17,15 @@
             <route>**</route>
         </resource>
     </resource>
+
+    <!-- 一级菜单：审计类管理 -->
+    <resource>
+        <id>operate</id>
+        <name>操作记录</name>
+        <method>*</method>
+        <route>/v*/operate/**</route>
+    </resource>
+
     <!-- 一级菜单：系统管理 -->
     <resource>
         <id>sysManage</id>

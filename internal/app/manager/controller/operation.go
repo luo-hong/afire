@@ -60,10 +60,12 @@ func OperationTypesList(c *gin.Context) {
 	if len(OperationType) != Count {
 		OperationType = map[string]string{
 
-			OpUserAdd:      OpUserAddStr,
-			OpUserUpdate:   OpUserUpdateStr,
-			OpUserResetPwd: OpUserResetPwdStr,
-			OpUserDelete:   OpUserDeleteStr,
+			OpUserAdd:         OpUserAddStr,
+			OpUserUpdate:      OpUserUpdateStr,
+			OpUserResetPwd:    OpUserResetPwdStr,
+			OpUserDelete:      OpUserDeleteStr,
+			OpCharacterAdd:    OpCharacterAddStr,
+			OpCharacterUpdate: OpCharacterUpdateStr,
 		}
 
 	}
