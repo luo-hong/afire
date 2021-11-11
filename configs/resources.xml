@@ -20,12 +20,10 @@
 
     <!-- 一级菜单：审计类管理 -->
     <resource>
-        <id>audit</id>
-        <name>记录管理</name>
-        <resource>
-            <id>operate</id>
-            <name>操作审计</name>
-        </resource>
+        <id>operate</id>
+        <name>操作记录</name>
+        <method>*</method>
+        <route>/v*/operate/**</route>
     </resource>
 
     <!-- 一级菜单：系统管理 -->
