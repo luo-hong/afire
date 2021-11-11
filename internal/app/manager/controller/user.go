@@ -415,13 +415,13 @@ func DeleteUser(c *gin.Context) {
 		log.Errorw("del_user", "err", err.Error(), "uid", uid)
 		c.JSON(http.StatusOK, responseWithStatus(-1, err.Error()))
 		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
-			OpUserResetPwd, uid, false, err)
+			OpUserDelete, uid, false, err)
 		return
 	}
 
 	cli := catch.Cli()
 	_ = cli.Del(catch.KeyWithPrefix(catchUIDKey + c.Param("uid"))).Err()
 	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
-		OpUserResetPwd, uid, true, nil)
+		OpUserDelete, uid, true, nil)
 	c.JSON(http.StatusOK, responseWithStatus(1, "删除成功"))
 }

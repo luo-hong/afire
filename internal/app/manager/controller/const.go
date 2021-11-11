@@ -14,4 +14,7 @@ const (
 
 	OpUserResetPwd    = "user_reset_pwd"
 	OpUserResetPwdStr = "重置用户密码"
+
+	OpUserDelete    = "user_delete"
+	OpUserDeleteStr = "删除用户"
 )
