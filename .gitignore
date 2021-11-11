@@ -2,6 +2,7 @@
 ### Example user template
 
 # IntelliJ project files
+version/version.go
 .idea
 *.iml
 *.log

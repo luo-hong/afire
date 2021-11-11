@@ -1,5 +1,5 @@
 [server]
-listen = "0.0.0.0:32112"
+listen = "0.0.0.0:32112" #开发用 0.0.0.0:32112  服务器的IP：(公) 47.109.18.0 (内) 172.19.9.99
 mode = "debug"
 write_dir = "" #写linux的目录，存放log等文件的位置
 cookie_timeout = "24h"
@@ -11,14 +11,16 @@ card_interval_time = "4s"
 [db]
     [db.afire]
     type = "mysql" #mysql postgres
-    master_uri = "root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s" #数据库的路由
+    master_uri = "root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s"
+    #开发用数据库的路由 root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s
+    #服务的路由 root:623724@tcp(47.109.18.0:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s
     slave_uris = ["root:623724@tcp(127.0.0.1:3306)/afire?charset=utf8&parseTime=True&loc=Local&timeout=10s"] #同上
     log_mode = true
     max_idle_conns = 1
     max_open_conns = 20
 
 [redis]
-hosts = ["127.0.0.1:6379"] #redis的ip
+hosts = ["127.0.0.1:6379"] #开发用的redis的ip:127.0.0.1:6379 服务器redis的ip:47.109.18.0:6379
 password = ""
 prefix = "afire:" #名称如 afire:
 dial_timeout = "3s"
@@ -33,7 +35,7 @@ agents = ["127.0.0.1:32113"]
 #production_ipmask = ["172.32.0.0/16"] #到时候服务器的ip,这里是举例
 
 [log]
-path = "D:\\GOPATH\\src\\afire\\log"
+path = "D:\\GOPATH\\src\\afire\\log" #开发用的地址为:D:\\GOPATH\\src\\afire\\log  服务的地址为: /home/afire/manager/log/
 level = "debug" #debug,info,error
 max_size_one_file = "1gb" #pb,tb,gb,mb,kb
 
