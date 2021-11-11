@@ -20,4 +20,7 @@ const (
 
 	OpCharacterAdd    = "character_add"
 	OpCharacterAddStr = "新增角色"
+
+	OpCharacterUpdate    = "character_update"
+	OpCharacterUpdateStr = "更新角色"
 )
