@@ -23,7 +23,8 @@ func SyncInitHTTP(cfg configs.ManagerConfig) error {
 	r.Use(controller.SetRequestID())
 	v1 := r.Group("/v1",controller.CheckLogin(),controller.CheckUserRole())
 
-	addUserRoute(v1)
+	addUserRoute(v1) // 用户相关的借口
+	addCharacterRoute(v1) // 角色相关的借口
 
 
 	return r.Run(cfg.HTTP.Listen)
