@@ -116,3 +116,69 @@ func UpdateChar(req CharacterAddReq, cid int) (e error) {
 
 	return nil
 }
+
+type GetCharListWithName struct {
+	Name string `form:"name" json:"name"`
+}
+
+type CharListRes struct {
+	ID         int      `json:"id,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Introduce  string   `json:"introduce,omitempty"`
+	ResourceID []string `json:"resources"`
+}
+
+func ListChar(offset, size int, name string) ([]CharListRes, int, error) {
+	// 查出ID、Name、Introduce
+	selector := models.NewCharacterSelector(offset, size)
+
+	selector.NameLike = name
+
+	count, err := selector.Count(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	// 获取角色id，角色name，角色介绍
+	out, err := selector.Find(database.AFIRESlave(), "ID", "Name", "Introduce")
+	if err != nil {
+		return nil, 0, err
+	} else if len(out) == 0 {
+		log.Warnw("list_char", "warn", "list_char_is_nil")
+		return []CharListRes{}, int(count), nil
+	}
+	// 查出CID和ResourceID
+	res := models.NewCharacterResourceSelector(0, 0)
+	for _, v := range out {
+		res.CID = append(res.CID, v.ID)
+	}
+
+	outRid, err := res.Find(database.AFIRESlave(), "CID", "ResourceID")
+	if err != nil {
+		return nil, 0, err
+	}
+	// 组装数据
+	cid2rids := map[int][]string{} // 用map关联角色id和资源id列表
+	for _, v := range outRid {
+		_, ok := cid2rids[v.CID] // 查看角色id是否在map中
+		if !ok {
+			cid2rids[v.CID] = []string{v.ResourceID} // 不在map中，新增
+		} else {
+			cid2rids[v.CID] = append(cid2rids[v.CID], v.ResourceID) // 在map中，将对应的资源append数组
+		}
+	}
+
+	resList := make([]CharListRes, len(out))
+	for index, v := range out {
+		resList[index] = CharListRes{
+			ID:         v.ID,
+			Name:       v.Name,
+			Introduce:  v.Introduce,
+			ResourceID: []string{},
+		}
+		if _, ok := cid2rids[v.ID]; ok {
+			resList[index].ResourceID = cid2rids[v.ID]
+		}
+	}
+
+	return resList, int(count), err
+}

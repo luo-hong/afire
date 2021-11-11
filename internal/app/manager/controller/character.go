@@ -65,3 +65,20 @@ func UpdateCharacter(c *gin.Context) {
 	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
 		OpCharacterUpdate, form, true, nil)
 }
+
+func ListCharacter(c *gin.Context) {
+	var form business.GetCharListWithName
+	if err := c.Bind(&form); err != nil {
+		log.Warnw("list_character", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "提交表单失败"+err.Error()))
+		return
+	}
+
+	res, count, err := business.ListChar(c.GetInt(offset), c.GetInt(size), form.Name)
+	if err != nil {
+		log.Errorw("list_character", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "获取角色列表失败"+err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, responseWithData(res, count, c.GetInt(offset), c.GetInt(size), ""))
+}
