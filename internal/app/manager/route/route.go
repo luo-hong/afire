@@ -21,11 +21,10 @@ func SyncInitHTTP(cfg configs.ManagerConfig) error {
 	})))
 	gin.SetMode(cfg.HTTP.Mode)
 	r.Use(controller.SetRequestID())
-	v1 := r.Group("/v1",controller.CheckLogin(),controller.CheckUserRole())
+	v1 := r.Group("/v1", controller.CheckLogin(), controller.CheckUserRole())
 
-	addUserRoute(v1) // 用户相关的借口
-	addCharacterRoute(v1) // 角色相关的借口
-
+	addUserRoute(v1)      // 用户相关的借口
+	addCharacterRoute(v1) // 角色相关的接口 说明角色指的是权限资源
 
 	return r.Run(cfg.HTTP.Listen)
 }

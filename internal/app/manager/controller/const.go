@@ -17,4 +17,7 @@ const (
 
 	OpUserDelete    = "user_delete"
 	OpUserDeleteStr = "删除用户"
+
+	OpCharacterAdd    = "character_add"
+	OpCharacterAddStr = "新增角色"
 )

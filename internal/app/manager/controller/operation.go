@@ -64,6 +64,7 @@ func OperationTypesList(c *gin.Context) {
 			OpUserUpdate:   OpUserUpdateStr,
 			OpUserResetPwd: OpUserResetPwdStr,
 			OpUserDelete:   OpUserDeleteStr,
+			OpCharacterAdd: OpCharacterAddStr,
 		}
 
 	}
