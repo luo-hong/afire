@@ -17,7 +17,7 @@ func MakeFields(db *gorm.DB, value interface{}) (fields map[string]string, prelo
 		_, ignore := field.TagSettings["-"]
 		if len(field.DBName) > 0 && !foreignKey && !references {
 			//有列名，没外键，则是列
-			fields[field.DBName] = field.DBName
+			fields[field.Name] = field.DBName
 		} else if !ignore && len(field.DataType) == 0 {
 			//无类型，则肯定为Struct，则认为它是Preloads
 			preloads[field.Name] = true
