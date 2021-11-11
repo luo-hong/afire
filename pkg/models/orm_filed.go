@@ -27,6 +27,7 @@ func MakeFields(db *gorm.DB, value interface{}) (fields map[string]string, prelo
 	return fields, preloads, nil
 }
 
+// MakeSelectorAndPreload tags是struct对应的属性名，而不是DB列名
 func MakeSelectorAndPreload(db *gorm.DB, fields map[string]string, preloads map[string]bool, tags ...string) (*gorm.DB, error) {
 	s := make([]string, len(tags))
 	if len(tags) == 0 {

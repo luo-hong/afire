@@ -2,6 +2,7 @@ package models
 
 import (
 	"afire/pkg/tool"
+	"afire/utils"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -37,7 +38,7 @@ func (cs *CharacterSelector) makeQuery(db *gorm.DB, column ...string) (*gorm.DB,
 	}
 
 	if len(cs.ID) > 0 {
-		db = db.Where("id in (?)", cs.ID)
+		db = db.Where("id in (?)", utils.RemoveRepeatInt(cs.ID))
 	}
 	if len(cs.NameLike) > 0 {
 		tmpNameLike := tool.MakeFuzzyFiled(cs.NameLike, tool.ContainsFuzzyFiled)
