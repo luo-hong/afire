@@ -21,6 +21,12 @@ type UserSelector struct {
 	UIDOrName string   // 模糊
 }
 
+func NewUserSelector(offset, limit int) *UserSelector {
+	return &UserSelector{
+		PageSelector: MakePageSelector(offset, limit),
+	}
+}
+
 func (us *UserSelector) makeQuery(db *gorm.DB, column ...string) (*gorm.DB, error) {
 	db = db.Table(emptyUser.TableName())
 	if len(column) > 0 {

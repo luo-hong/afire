@@ -17,6 +17,12 @@ type UserCharacterSelector struct {
 	CID []int
 }
 
+func NewUserCharacterSelector(offset, limit int) *UserCharacterSelector {
+	return &UserCharacterSelector{
+		PageSelector: MakePageSelector(offset, limit),
+	}
+}
+
 func (ucs *UserCharacterSelector) makeQuery(db *gorm.DB, column ...string) (*gorm.DB, error) {
 	db = db.Table(emptyUserCharacter.TableName())
 	if len(column) > 0 {

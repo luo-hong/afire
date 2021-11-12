@@ -128,6 +128,7 @@ type CharListRes struct {
 	ResourceID []string `json:"resources"`
 }
 
+// ListChar 获取角色列表
 func ListChar(offset, size int, name string) ([]CharListRes, int, error) {
 	// 查出ID、Name、Introduce
 	selector := models.NewCharacterSelector(offset, size)
@@ -181,4 +182,34 @@ func ListChar(offset, size int, name string) ([]CharListRes, int, error) {
 	}
 
 	return resList, int(count), err
+}
+
+// CidGetUserInfo 角色查用户
+func CidGetUserInfo(cid, offset, size int) ([]models.User, int64, error) {
+	selector := models.NewUserCharacterSelector(offset, size)
+	selector.CID = []int{cid}
+	out, err := selector.UIDs(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(out) == 0 {
+		log.Warnw("cid_get_user_info", "warn", "uid_count_is_zero")
+		return []models.User{}, 0, err
+	}
+	sUser := models.NewUserSelector(offset, size)
+	sUser.UID = out
+	count, err := sUser.Count(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	if count == 0 {
+		log.Warnw("cid_get_user_info", "warn", "user_count_is_zero")
+		return nil, 0, err
+	}
+	users, err := sUser.Find(database.AFIRESlave(), "UID", "Name","Phone","Email")
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, count, nil
 }

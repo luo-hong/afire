@@ -82,3 +82,22 @@ func ListCharacter(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, responseWithData(res, count, c.GetInt(offset), c.GetInt(size), ""))
 }
+
+func CidGetUserInfo(c *gin.Context) {
+	characterID := c.Param("cid")
+	cid, err := strconv.Atoi(characterID)
+	if err != nil {
+		log.Warnw("cid_get_user_info", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	var a = c.GetInt(offset)
+	var b = c.GetInt(size)
+	users, count, err := business.CidGetUserInfo(cid, a, b)
+	if err != nil {
+		log.Errorw("cid_get_user_info", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, responseWithData(users, int(count), c.GetInt(size), c.GetInt(offset), ""))
+}
