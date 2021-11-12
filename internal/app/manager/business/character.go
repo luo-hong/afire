@@ -206,10 +206,49 @@ func CidGetUserInfo(cid, offset, size int) ([]models.User, int64, error) {
 		log.Warnw("cid_get_user_info", "warn", "user_count_is_zero")
 		return nil, 0, err
 	}
-	users, err := sUser.Find(database.AFIRESlave(), "UID", "Name","Phone","Email")
+	users, err := sUser.Find(database.AFIRESlave(), "UID", "Name", "Phone", "Email")
 	if err != nil {
 		return nil, 0, err
 	}
 
 	return users, count, nil
+}
+
+// DeleteChar 删除角色
+func DeleteChar(cid int) (e error) {
+	selector := models.NewUserCharacterSelector(0, 0)
+	selector.CID = []int{cid}
+	count, err := selector.Count(database.AFIRESlave())
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("这个角色已经关联到用户，不能删除")
+	}
+
+	defer func() {
+		if e == nil {
+			err := InitCharacterRules(&resources)
+			if err != nil {
+				log.Warnw("reload_chara_rules", "err", err)
+			}
+		}
+	}()
+
+	char := models.Character{
+		ID: cid,
+	}
+	err = char.DeleteCharacter(database.AFIREMaster())
+	if err != nil {
+		return err
+	}
+	charaSource := models.CharacterResource{
+		CID: cid,
+	}
+	err = charaSource.DeleteWithCid(database.AFIREMaster())
+	if err != nil {
+		log.Warnw("delete", "err", err.Error())
+	}
+
+	return nil
 }

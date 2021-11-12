@@ -101,3 +101,25 @@ func CidGetUserInfo(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, responseWithData(users, int(count), c.GetInt(size), c.GetInt(offset), ""))
 }
+
+func DeleteCharacter(c *gin.Context) {
+	cidStr := c.Param("cid")
+	cid, err := strconv.Atoi(cidStr)
+	if err != nil {
+		log.Warnw("delete_character", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "类型转换失败"+err.Error()))
+		return
+	}
+
+	err = business.DeleteChar(cid)
+	if err != nil {
+		log.Errorw("delete_character", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "删除角色失败"+err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpCharacterDelete, cid, false, err)
+		return
+	}
+	c.JSON(http.StatusOK, responseWithStatus(1, "删除角色成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpCharacterDelete, cid, true, nil)
+}
