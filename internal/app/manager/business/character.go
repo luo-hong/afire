@@ -31,6 +31,16 @@ func (c *CharacterAddReq) Verify() error {
 	return nil
 }
 
+func (c *CharacterUserDelReq) Verify() error {
+	if c.CID == 0 {
+		return errors.New("角色ID为空")
+	}
+	if len(c.UID) == 0 {
+		return errors.New("用户ID为空")
+	}
+	return nil
+}
+
 // AddChar 增加角色
 func AddChar(req CharacterAddReq) (e error) {
 	// 插入角色name和介绍
@@ -115,4 +125,159 @@ func UpdateChar(req CharacterAddReq, cid int) (e error) {
 	}
 
 	return nil
+}
+
+type GetCharListWithName struct {
+	Name string `form:"name" json:"name"`
+}
+
+type CharListRes struct {
+	ID         int      `json:"id,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	Introduce  string   `json:"introduce,omitempty"`
+	ResourceID []string `json:"resources"`
+}
+
+// ListChar 获取角色列表
+func ListChar(offset, size int, name string) ([]CharListRes, int, error) {
+	// 查出ID、Name、Introduce
+	selector := models.NewCharacterSelector(offset, size)
+
+	selector.NameLike = name
+
+	count, err := selector.Count(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	// 获取角色id，角色name，角色介绍
+	out, err := selector.Find(database.AFIRESlave(), "ID", "Name", "Introduce")
+	if err != nil {
+		return nil, 0, err
+	} else if len(out) == 0 {
+		log.Warnw("list_char", "warn", "list_char_is_nil")
+		return []CharListRes{}, int(count), nil
+	}
+	// 查出CID和ResourceID
+	res := models.NewCharacterResourceSelector(0, 0)
+	for _, v := range out {
+		res.CID = append(res.CID, v.ID)
+	}
+
+	outRid, err := res.Find(database.AFIRESlave(), "CID", "ResourceID")
+	if err != nil {
+		return nil, 0, err
+	}
+	// 组装数据
+	cid2rids := map[int][]string{} // 用map关联角色id和资源id列表
+	for _, v := range outRid {
+		_, ok := cid2rids[v.CID] // 查看角色id是否在map中
+		if !ok {
+			cid2rids[v.CID] = []string{v.ResourceID} // 不在map中，新增
+		} else {
+			cid2rids[v.CID] = append(cid2rids[v.CID], v.ResourceID) // 在map中，将对应的资源append数组
+		}
+	}
+
+	resList := make([]CharListRes, len(out))
+	for index, v := range out {
+		resList[index] = CharListRes{
+			ID:         v.ID,
+			Name:       v.Name,
+			Introduce:  v.Introduce,
+			ResourceID: []string{},
+		}
+		if _, ok := cid2rids[v.ID]; ok {
+			resList[index].ResourceID = cid2rids[v.ID]
+		}
+	}
+
+	return resList, int(count), err
+}
+
+// CidGetUserInfo 角色查用户
+func CidGetUserInfo(cid, offset, size int) ([]models.User, int64, error) {
+	selector := models.NewUserCharacterSelector(offset, size)
+	selector.CID = []int{cid}
+	out, err := selector.UIDs(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(out) == 0 {
+		log.Warnw("cid_get_user_info", "warn", "uid_count_is_zero")
+		return []models.User{}, 0, err
+	}
+	sUser := models.NewUserSelector(offset, size)
+	sUser.UID = out
+	count, err := sUser.Count(database.AFIRESlave())
+	if err != nil {
+		return nil, 0, err
+	}
+	if count == 0 {
+		log.Warnw("cid_get_user_info", "warn", "user_count_is_zero")
+		return nil, 0, err
+	}
+	users, err := sUser.Find(database.AFIRESlave(), "UID", "Name", "Phone", "Email")
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, count, nil
+}
+
+// DeleteChar 删除角色
+func DeleteChar(cid int) (e error) {
+	selector := models.NewUserCharacterSelector(0, 0)
+	selector.CID = []int{cid}
+	count, err := selector.Count(database.AFIRESlave())
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("这个角色已经关联到用户，不能删除")
+	}
+
+	defer func() {
+		if e == nil {
+			err := InitCharacterRules(&resources)
+			if err != nil {
+				log.Warnw("reload_chara_rules", "err", err)
+			}
+		}
+	}()
+
+	char := models.Character{
+		ID: cid,
+	}
+	err = char.DeleteCharacter(database.AFIREMaster())
+	if err != nil {
+		return err
+	}
+	charaSource := models.CharacterResource{
+		CID: cid,
+	}
+	err = charaSource.DeleteWithCid(database.AFIREMaster())
+	if err != nil {
+		log.Warnw("delete", "err", err.Error())
+	}
+
+	return nil
+}
+
+type CharacterUserDelReq struct {
+	CID int    `json:"c_id"`
+	UID string `json:"u_id"`
+}
+
+// DeleteCharacterUser 删除角色下某个用户
+func DeleteCharacterUser(req CharacterUserDelReq) error {
+	char := models.UserCharacter{
+		UID: req.UID,
+		CID: req.CID,
+	}
+	err := char.Delete(database.AFIREMaster())
+	if err != nil {
+		return err
+	}
+
+	return err
 }

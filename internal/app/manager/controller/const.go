@@ -23,4 +23,10 @@ const (
 
 	OpCharacterUpdate    = "character_update"
 	OpCharacterUpdateStr = "更新角色"
+
+	OpCharacterDelete    = "character_delete"
+	OpCharacterDeleteStr = "删除角色"
+
+	OpCharacterUpdateUser    = "character_update_user"
+	OpCharacterUpdateUserStr = "修改角色用户"
 )

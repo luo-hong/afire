@@ -65,3 +65,83 @@ func UpdateCharacter(c *gin.Context) {
 	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
 		OpCharacterUpdate, form, true, nil)
 }
+
+func ListCharacter(c *gin.Context) {
+	var form business.GetCharListWithName
+	if err := c.Bind(&form); err != nil {
+		log.Warnw("list_character", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "提交表单失败"+err.Error()))
+		return
+	}
+
+	res, count, err := business.ListChar(c.GetInt(offset), c.GetInt(size), form.Name)
+	if err != nil {
+		log.Errorw("list_character", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "获取角色列表失败"+err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, responseWithData(res, count, c.GetInt(offset), c.GetInt(size), ""))
+}
+
+func CidGetUserInfo(c *gin.Context) {
+	characterID := c.Param("cid")
+	cid, err := strconv.Atoi(characterID)
+	if err != nil {
+		log.Warnw("cid_get_user_info", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	var a = c.GetInt(offset)
+	var b = c.GetInt(size)
+	users, count, err := business.CidGetUserInfo(cid, a, b)
+	if err != nil {
+		log.Errorw("cid_get_user_info", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, responseWithData(users, int(count), c.GetInt(size), c.GetInt(offset), ""))
+}
+
+func DeleteCharacter(c *gin.Context) {
+	cidStr := c.Param("cid")
+	cid, err := strconv.Atoi(cidStr)
+	if err != nil {
+		log.Warnw("delete_character", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "类型转换失败"+err.Error()))
+		return
+	}
+
+	err = business.DeleteChar(cid)
+	if err != nil {
+		log.Errorw("delete_character", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, "删除角色失败"+err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpCharacterDelete, cid, false, err)
+		return
+	}
+	c.JSON(http.StatusOK, responseWithStatus(1, "删除角色成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpCharacterDelete, cid, true, nil)
+}
+
+func DelCharUser(c *gin.Context) {
+	var form business.CharacterUserDelReq
+	form.UID = c.Param("uid")
+	form.CID, _ = strconv.Atoi(c.Param("cid"))
+	if err := form.Verify(); err != nil {
+		log.Warnw("del_char_user", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	err := business.DeleteCharacterUser(form)
+	if err != nil {
+		log.Errorw("del_char_user", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpCharacterUpdateUser, form, false, err)
+		return
+	}
+	c.JSON(http.StatusOK, responseWithStatus(1, "删除成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpCharacterUpdateUser, form, true, nil)
+}
