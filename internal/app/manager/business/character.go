@@ -31,6 +31,16 @@ func (c *CharacterAddReq) Verify() error {
 	return nil
 }
 
+func (c *CharacterUserDelReq) Verify() error {
+	if c.CID == 0 {
+		return errors.New("角色ID为空")
+	}
+	if len(c.UID) == 0 {
+		return errors.New("用户ID为空")
+	}
+	return nil
+}
+
 // AddChar 增加角色
 func AddChar(req CharacterAddReq) (e error) {
 	// 插入角色name和介绍
@@ -251,4 +261,23 @@ func DeleteChar(cid int) (e error) {
 	}
 
 	return nil
+}
+
+type CharacterUserDelReq struct {
+	CID int    `json:"c_id"`
+	UID string `json:"u_id"`
+}
+
+// DeleteCharacterUser 删除角色下某个用户
+func DeleteCharacterUser(req CharacterUserDelReq) error {
+	char := models.UserCharacter{
+		UID: req.UID,
+		CID: req.CID,
+	}
+	err := char.Delete(database.AFIREMaster())
+	if err != nil {
+		return err
+	}
+
+	return err
 }

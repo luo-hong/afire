@@ -123,3 +123,25 @@ func DeleteCharacter(c *gin.Context) {
 	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
 		OpCharacterDelete, cid, true, nil)
 }
+
+func DelCharUser(c *gin.Context) {
+	var form business.CharacterUserDelReq
+	form.UID = c.Param("uid")
+	form.CID, _ = strconv.Atoi(c.Param("cid"))
+	if err := form.Verify(); err != nil {
+		log.Warnw("del_char_user", "warn", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		return
+	}
+	err := business.DeleteCharacterUser(form)
+	if err != nil {
+		log.Errorw("del_char_user", "err", err.Error())
+		c.JSON(http.StatusBadRequest, responseWithStatus(0, err.Error()))
+		_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+			OpCharacterUpdateUser, form, false, err)
+		return
+	}
+	c.JSON(http.StatusOK, responseWithStatus(1, "删除成功"))
+	_ = business.NewOperation(c.GetHeader(XRequestID), c.MustGet(userinfo).(*UserInfoInCatch),
+		OpCharacterUpdateUser, form, true, nil)
+}

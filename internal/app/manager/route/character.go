@@ -12,5 +12,5 @@ func addCharacterRoute(r *gin.RouterGroup) {
 	character.GET("/list", controller.PageChecker(), controller.ListCharacter)       // 获取所有角色列表，如果有name参数就查和这个name相关的角色列表
 	character.GET("/user/:cid", controller.PageChecker(), controller.CidGetUserInfo) // 根据角色id查询用户，如果数据多后期要做筛选
 	character.DELETE("/:cid", controller.DeleteCharacter)                            // 删除角色
-	character.DELETE("/:cid/:uid")                                                   // 删除角色下某个用户
+	character.DELETE("/:cid/:uid", controller.DelCharUser)                           // 删除角色下某个用户
 }
