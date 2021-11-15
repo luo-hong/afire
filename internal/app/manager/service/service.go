@@ -122,5 +122,12 @@ func start() error {
 	log.Println("started")
 	business.SetLogger(l)
 
+	// 读取操作chan
+	doneWG, _ := exit.RegisterExiter()
+	go func() {
+		business.ReadOperationCh()
+		doneWG.Done()
+	}()
+
 	return nil
 }

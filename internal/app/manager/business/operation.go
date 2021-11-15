@@ -17,7 +17,18 @@ import (
 
 var catchOperationTypes singleflight.Group
 
-func NewOperation(reqid string, ui UserInfo, operation string, detail interface{}, result interface{}, rErr error) error {
+var operationCh = make(chan Operation, 1000)
+
+type Operation struct {
+	ReqID     string
+	Ui        UserInfo
+	Operation string
+	Detail    interface{}
+	Result    interface{}
+	RErr      error
+}
+
+func NewOperation(reqID string, ui UserInfo, operation string, detail interface{}, result interface{}, rErr error) error {
 	go func() {
 		defer func() {
 			e := recover()
@@ -30,17 +41,45 @@ func NewOperation(reqid string, ui UserInfo, operation string, detail interface{
 				)
 			}
 		}()
-		e := newOperation(reqid, ui, operation, detail, result, rErr)
-		if e != nil {
-			log.Errorw("new_operation",
-				"err", e.Error(),
-			)
+		operationCh <- Operation{
+			ReqID:     reqID,
+			Ui:        ui,
+			Operation: operation,
+			Detail:    detail,
+			Result:    result,
+			RErr:      rErr,
 		}
 	}()
 	return nil
 }
 
-func newOperation(reqid string, ui UserInfo, operation string, detail interface{}, result interface{}, rErr error) error {
+func ReadOperationCh() {
+	for d := range operationCh {
+		e := newOperation(d.ReqID, d.Ui, d.Operation, d.Detail, d.Result, d.RErr)
+		if e != nil {
+			log.Errorw("new_operation",
+				"err", e.Error(),
+			)
+		}
+	}
+}
+
+func CloseOperationCh() {
+	close(operationCh)
+}
+
+func newOperation(reqID string, ui UserInfo, operation string, detail interface{}, result interface{}, rErr error) error {
+	defer func() {
+		e := recover()
+		if e != nil {
+			stack := make([]byte, 1024)
+			length := runtime.Stack(stack, false)
+			err := errors.Errorf("panic: %v\nstatic: %v", e, string(stack[:length]))
+			log.Errorw("new_operation",
+				"err", err.Error(),
+			)
+		}
+	}()
 	dStr := ""
 	switch x := detail.(type) {
 	case string:
@@ -83,7 +122,7 @@ func newOperation(reqid string, ui UserInfo, operation string, detail interface{
 		Operator:   ui.GetName(),
 		Operation:  operation,
 		OperatorID: ui.GetUID(),
-		RequestID:  reqid,
+		RequestID:  reqID,
 		Details:    dStr,
 		UtilInfo: models.UtilInfo{
 			Editor: ui.GetName(),
