@@ -23,6 +23,7 @@ func SyncInitHTTP(cfg configs.ManagerConfig) error {
 	r.Use(controller.SetRequestID())
 	v1 := r.Group("/v1", controller.CheckLogin(), controller.CheckUserRole())
 
+	addRubbishRoute(v1)   // 获取垃圾数据
 	addOperationRoute(v1) // 操作记录的接口
 	addUserRoute(v1)      // 用户相关的接口
 	addCharacterRoute(v1) // 角色相关的接口 说明角色指的是权限资源
